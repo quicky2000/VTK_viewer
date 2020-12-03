@@ -9,6 +9,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(ENABLE_CUDA_CODE off)
 
 set(MY_SOURCE_FILES
+    include/histogram.h
+    include/surface.h
+    include/table_based.h
     src/main.cpp
    )
 
