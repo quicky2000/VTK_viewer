@@ -1,3 +1,21 @@
+/*
+      This file is part of VTK_viewer
+      Copyright (C) 2020 Julien Thevenon ( julien_thevenon at yahoo.fr )
+
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
+
+      You should have received a copy of the GNU General Public License
+      along with this program.  If not, see <http://www.gnu.org/licenses/>
+*/
+
 #include <vtkActor.h>
 #include <vtkChartXYZ.h> // Module vtkChartsCore
 #include <vtkPlotSurface.h>
@@ -137,7 +155,7 @@ void display_histogram( const vtkStdString & p_title
     l_chart->GetTitleProperties()->SetColor(l_title_color.GetData());
     l_chart->GetTitleProperties()->BoldOn();
 
-    if(l_color_series->GetNumberOfColors() < p_nb_series)
+    if(l_color_series->GetNumberOfColors() < (int)p_nb_series)
     {
         throw std::logic_error("to many series compared to number of color");
     }
@@ -212,11 +230,11 @@ int main( int p_argc
                     l_line_stream >> l_histogram_title >> l_histogram_x_axis >> l_histogram_y_axis >> l_histogram_width >> l_histogram_series;
                     l_table_data_dim = std::make_pair(l_histogram_width, l_histogram_series);
                     size_table(l_table, l_histogram_width, l_histogram_series + 1);
-                    for( int l_column_index = 0; l_column_index < l_histogram_series + 1; ++l_column_index)
+                    for(int l_column_index = 0; l_column_index < ((int)l_histogram_series) + 1; ++l_column_index)
                     {
-                        dynamic_cast<vtkTypeInt32Array*>(l_table->GetColumn(l_column_index))->SetName(std::to_string(l_column_index).c_str());
+                        dynamic_cast<vtkTypeInt32Array*>(l_table->GetColumn((int)l_column_index))->SetName(std::to_string(l_column_index).c_str());
                     }
-                    for (int l_row_index = 0; l_row_index < l_histogram_width; l_row_index++)
+                    for(int l_row_index = 0; l_row_index < (int)l_histogram_width; l_row_index++)
                     {
                         l_table->SetValue(l_row_index, 0, l_row_index + 1);
                     }
