@@ -13,6 +13,8 @@ set(MY_SOURCE_FILES
     include/surface.h
     include/table_based.h
     src/main.cpp
+    include/VTK_viewer.h
+    src/VTK_viewer.cpp
    )
 
 find_package(VTK COMPONENTS
