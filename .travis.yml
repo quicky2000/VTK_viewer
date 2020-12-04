@@ -11,7 +11,7 @@ language: cpp
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update; sudo apt-get install -y qt5-default libqt5opengl5-dev; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install -v qt5 ; brew link qt5 --force ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install -v qt5 vtk; brew link qt5 --force ; fi
   - MY_LOCATION=`pwd`
   - mkdir ../repositories
   - cd ..
@@ -26,15 +26,9 @@ before_install:
   - . setup.sh
   - cd $MY_LOCATION
   - chmod a+x repositories/quicky_tools/bin/*
-  - wget https://www.vtk.org/files/release/9.0/VTK-9.0.1.tar.gz
-  - tar -zxvf VTK-9.0.1.tar.gz
-  - mkdir VTK-9.0.1_build
-  - cd VTK-9.0.1_build
-  - cmake -DCMAKE_BUILD_TYPE:STRING=Release -DVTK_QT_VERSION:STRING=5 -DQT_QMAKE_EXECUTABLE:PATH=/usr/lib/qt5/bin/qmake -DCMAKE_PREFIX_PATH:PATH=/usr/lib/x86_64-linux-gnu/cmake -DBUILD_SHARED_LIBS:BOOL=ON -DVTK_MODULE_ENABLE_VTK_RenderingContextOpenGL2=YES ../VTK-9.0.1
-  - make -j4
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo make install; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make install; fi
-  - cd $MY_LOCATION
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then wget https://www.vtk.org/files/release/9.0/VTK-9.0.1.tar.gz; tar -zxvf VTK-9.0.1.tar.gz; mkdir VTK-9.0.1_build; cd VTK-9.0.1_build; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake -DCMAKE_BUILD_TYPE:STRING=Release -DVTK_QT_VERSION:STRING=5 -DQT_QMAKE_EXECUTABLE:PATH=/usr/lib/qt5/bin/qmake -DCMAKE_PREFIX_PATH:PATH=/usr/lib/x86_64-linux-gnu/cmake -DBUILD_SHARED_LIBS:BOOL=ON -DVTK_MODULE_ENABLE_VTK_RenderingContextOpenGL2=YES ../VTK-9.0.1 ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make -j4; sudo make install; cd $MY_LOCATION; fi
   - mkdir build
   - cd build
 
