@@ -15,41 +15,21 @@
       You should have received a copy of the GNU General Public License
       along with this program.  If not, see <http://www.gnu.org/licenses/>
 */
-#ifndef VTK_VIEWER_VTK_VIEWER_H
-#define VTK_VIEWER_VTK_VIEWER_H
 
-#include "surface.h"
-#include "histogram.h"
-#include "line_plot.h"
-#include <variant>
-#include <string>
+#ifndef VTK_VIEWER_LINE_PLOT_H
+#define VTK_VIEWER_LINE_PLOT_H
+
+#include "graph_based.h"
+#include <sstream>
 
 namespace VTK_viewer
 {
-    class VTK_viewer
+    class line_plot: public graph_based
     {
       public:
 
-        explicit
-        VTK_viewer(const std::string & p_file_name);
-
-        void display() const;
-
       private:
 
-        void display(const surface & p_surface) const;
-
-        void display(const histogram & p_histogram) const;
-
-        void display(const line_plot & p_line_plot) const;
-
-        void display(const graph_based & p_graph_base
-                    ,int p_type
-                    ,float p_width
-                    ) const;
-
-        std::variant<surface,histogram,line_plot> m_displayable_object;
     };
-
 }
-#endif //VTK_VIEWER_VTK_VIEWER_H
+#endif //VTK_VIEWER_LINE_PLOT_H

@@ -31,6 +31,7 @@
 #include <vtkChartXY.h>
 #include <vtkAxis.h>
 #include <vtkTextProperty.h>
+#include <vtkChartLegend.h>
 #include <vtkPlot.h>
 #include <vtkPen.h>
 #include <iostream>
@@ -52,10 +53,10 @@ namespace VTK_viewer
         {
             throw quicky_exception::quicky_runtime_exception(R"(File ")" + p_file_name +R"(" do not exist)", __LINE__, __FILE__);
         }
-        
-        typedef enum class file_type {SURFACE, HISTOGRAM, NONE} t_file_type;
+
+        typedef enum class file_type {SURFACE, HISTOGRAM, LINE_PLOT, NONE} t_file_type;
         t_file_type l_file_type = t_file_type::NONE;
-        typedef enum class mode {SURFACE_PARAM, HISTOGRAM_PARAM, TABLE_DATA, HEADER} t_mode;
+        typedef enum class mode {SURFACE_PARAM, GRAPH_PARAM, GRAPH_LEGEND, TABLE_DATA, HEADER} t_mode;
         t_mode l_mode = t_mode::HEADER;
 
         unsigned int l_current_table_row = 0;
@@ -80,13 +81,22 @@ namespace VTK_viewer
                         l_mode = t_mode::TABLE_DATA;
                         break;
                     }
-                    case t_mode::HISTOGRAM_PARAM:
+                    case t_mode::GRAPH_PARAM:
                     {
                         std::stringstream l_line_stream;
                         l_line_stream << l_line;
-                        auto & l_histogram = std::get<histogram>(m_displayable_object);
-                        l_histogram.set_header(l_line_stream);
-                        l_table_data_dim = std::make_pair(l_histogram.get_width(), l_histogram.get_nb_series());
+                        graph_based & l_graph_based = t_file_type::HISTOGRAM == l_file_type ?  (graph_based&)std::get<histogram>(m_displayable_object) : (graph_based&)std::get<line_plot>(m_displayable_object);
+                        l_graph_based.set_header(l_line_stream);
+                        l_table_data_dim = std::make_pair(l_graph_based.get_width(), l_graph_based.get_nb_series());
+                        l_mode = t_mode::GRAPH_LEGEND;
+                        break;
+                    }
+                    case t_mode::GRAPH_LEGEND:
+                    {
+                        std::stringstream l_line_stream;
+                        l_line_stream << l_line;
+                        graph_based & l_graph_based = t_file_type::HISTOGRAM == l_file_type ?  (graph_based&)std::get<histogram>(m_displayable_object) : (graph_based&)std::get<line_plot>(m_displayable_object);
+                        l_graph_based.set_legend(l_line_stream);
                         l_mode = t_mode::TABLE_DATA;
                         break;
                     }
@@ -102,13 +112,19 @@ namespace VTK_viewer
                         for(vtkIdType l_column_index = 0; l_column_index < l_table_data_dim.first; ++l_column_index)
                         {
                             l_line_stream >> l_value;
-                            if(l_file_type == t_file_type::SURFACE)
+                            switch(l_file_type)
                             {
-                                std::get<surface>(m_displayable_object).set_value(l_current_table_row, l_column_index,l_value);
-                            }
-                            else
-                            {
-                                std::get<histogram>(m_displayable_object).set_value(l_current_table_row, l_column_index, l_value);
+                                case t_file_type::SURFACE:
+                                    std::get<surface>(m_displayable_object).set_value(l_current_table_row, l_column_index,l_value);
+                                    break;
+                                case t_file_type::HISTOGRAM:
+                                    std::get<histogram>(m_displayable_object).set_value(l_current_table_row, l_column_index, l_value);
+                                    break;
+                                case t_file_type::LINE_PLOT:
+                                    std::get<line_plot>(m_displayable_object).set_value(l_current_table_row, l_column_index, l_value);
+                                    break;
+                                case t_file_type::NONE:
+                                    throw quicky_exception::quicky_logic_exception("File tpye is not defined", __LINE__, __FILE__);
                             }
                         }
                         ++l_current_table_row;
@@ -124,8 +140,14 @@ namespace VTK_viewer
                         else if("histogram" == l_line)
                         {
                             l_file_type = t_file_type::HISTOGRAM;
-                            l_mode = t_mode::HISTOGRAM_PARAM;
+                            l_mode = t_mode::GRAPH_PARAM;
                             m_displayable_object = histogram();
+                        }
+                        else if("line_plot" == l_line)
+                        {
+                            l_file_type = t_file_type::LINE_PLOT;
+                            l_mode = t_mode::GRAPH_PARAM;
+                            m_displayable_object = line_plot();
                         }
                         else
                         {
@@ -142,10 +164,12 @@ namespace VTK_viewer
     void
     VTK_viewer::display() const
     {
-        std::visit(visitor_helper{ [=](surface p_surface)
+        std::visit(visitor_helper{ [=](const surface & p_surface)
                                    {this->display(p_surface);}
-                                 , [=](histogram p_histogram)
+                                 , [=](const histogram & p_histogram)
                                    {this->display(p_histogram);}
+                                 , [=](const line_plot & p_line_plot)
+                                   {this->display(p_line_plot);}
                                  }
                   ,m_displayable_object
                   );
@@ -199,6 +223,23 @@ namespace VTK_viewer
     void
     VTK_viewer::display(const histogram & p_histogram) const
     {
+        display(p_histogram, vtkChart::BAR, 0);
+    }
+
+    //-------------------------------------------------------------------------
+    void
+    VTK_viewer::display(const line_plot & p_line_plot) const
+    {
+        display(p_line_plot, vtkChart::LINE, 2);
+    }
+
+    //-------------------------------------------------------------------------
+    void
+    VTK_viewer::display(const graph_based & p_graph_base,
+                        int p_type,
+                        float p_width
+                       ) const
+    {
         // Colors
         vtkNew<vtkColorSeries> l_color_series;
         l_color_series->SetColorScheme(vtkColorSeries::BREWER_SEQUENTIAL_BLUE_PURPLE_3);
@@ -217,39 +258,40 @@ namespace VTK_viewer
 
         // Set various properties
         vtkAxis * l_x_axis = l_chart->GetAxis(vtkAxis::BOTTOM);
-        l_x_axis->SetTitle(p_histogram.get_x_axis());
+        l_x_axis->SetTitle(p_graph_base.get_x_axis());
         l_x_axis->GetTitleProperties()->SetColor(l_axis_color.GetData());
         l_x_axis->GetTitleProperties()->SetFontSize(16);
         l_x_axis->GetTitleProperties()->ItalicOn();
         l_x_axis->GetLabelProperties()->SetColor(l_axis_color.GetData());
 
         vtkAxis * l_y_axis = l_chart->GetAxis(vtkAxis::LEFT);
-        l_y_axis->SetTitle(p_histogram.get_y_axis());
+        l_y_axis->SetTitle(p_graph_base.get_y_axis());
         l_y_axis->GetTitleProperties()->SetColor(l_axis_color.GetData());
         l_y_axis->GetTitleProperties()->SetFontSize(16);
         l_y_axis->GetTitleProperties()->ItalicOn();
         l_y_axis->GetLabelProperties()->SetColor(l_axis_color.GetData());
 
-        l_chart->SetTitle(p_histogram.get_title());
+        l_chart->SetTitle(p_graph_base.get_title());
         l_chart->GetTitleProperties()->SetFontSize(24);
         l_chart->GetTitleProperties()->SetColor(l_title_color.GetData());
         l_chart->GetTitleProperties()->BoldOn();
-
-        if(l_color_series->GetNumberOfColors() < (int)p_histogram.get_nb_series())
-        {
-            throw std::logic_error("to many series compared to number of color");
-        }
+        l_chart->SetShowLegend(true);
+        l_chart->GetLegend()->SetHorizontalAlignment(vtkChartLegend::LEFT);
+        l_chart->GetLegend()->SetVerticalAlignment(vtkChartLegend::TOP);
 
         vtkPlot * l_line;
-        for(int l_index_serie = 0; l_index_serie < (int)p_histogram.get_nb_series(); ++l_index_serie)
+        for(int l_index_serie = 0; l_index_serie < (int)p_graph_base.get_nb_series(); ++l_index_serie)
         {
-            l_line = l_chart->AddPlot(vtkChart::BAR);
-            l_line->SetColor( l_color_series->GetColor(l_index_serie).GetRed() / 255.0
-                            , l_color_series->GetColor(l_index_serie).GetGreen() / 255.0
-                            , l_color_series->GetColor(l_index_serie).GetBlue() / 255.0
+            l_line = l_chart->AddPlot(p_type);
+            l_line->SetColor( l_color_series->GetColorRepeating(l_index_serie).GetRed() / 255.0
+                            , l_color_series->GetColorRepeating(l_index_serie).GetGreen() / 255.0
+                            , l_color_series->GetColorRepeating(l_index_serie).GetBlue() / 255.0
                             );
-            l_line->SetInputData(p_histogram.get_table(), 0, l_index_serie + 1);
-
+            l_line->SetInputData(p_graph_base.get_table(), 0, l_index_serie + 1);
+            if(p_width)
+            {
+                l_line->SetWidth(p_width);
+            }
         }
 
         //Finally render the scene and compare the image to a reference image
@@ -257,9 +299,7 @@ namespace VTK_viewer
         l_view->GetRenderWindow()->Render();
         l_view->GetInteractor()->Initialize();
         l_view->GetInteractor()->Start();
-
     }
-
 }
 
 // EOF

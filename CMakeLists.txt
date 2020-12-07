@@ -9,11 +9,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(ENABLE_CUDA_CODE off)
 
 set(MY_SOURCE_FILES
+    include/graph_based.h
     include/histogram.h
+    include/line_plot.h
     include/surface.h
     include/table_based.h
-    src/main.cpp
     include/VTK_viewer.h
+    src/main.cpp
     src/VTK_viewer.cpp
    )
 
