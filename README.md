@@ -1,6 +1,6 @@
 # VTK_viewer
 
-Continuous integration with [Travis-Ci](https://travis-ci.org/quicky2000/VTK_viewer) : ![Build Status](https://travis-ci.org/quicky2000/VTK_viewer.svg?branch=main)
+Continuous integration with [Travis-Ci](https://travis-ci.com/quicky2000/VTK_viewer) : ![Build Status](https://travis-ci.com/quicky2000/VTK_viewer.svg?branch=main)
 
 The aim of this project is to exercise [VTK](https://vtk.org) library to display some data
 
@@ -16,5 +16,5 @@ To build this project you need
 * VTK
 
 Build process is the same used in [Travis file](.travis.yml)
-Reference build can be found [here](https://travis-ci.org/quicky2000/VTK_viewer)
+Reference build can be found [here](https://travis-ci.com/quicky2000/VTK_viewer)
 
