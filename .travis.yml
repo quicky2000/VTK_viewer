@@ -11,7 +11,7 @@ language: cpp
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update; sudo apt-get install -y qt5-default libqt5opengl5-dev; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install -v qt5 vtk; brew link qt5 --force ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then travis_wait 30 brew install -v qt5 vtk; brew link qt5 --force ; fi
   - MY_LOCATION=`pwd`
   - mkdir ../repositories
   - cd ..
