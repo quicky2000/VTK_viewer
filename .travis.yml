@@ -27,7 +27,7 @@ before_install:
   - tar -zxvf VTK-9.0.1.tar.gz
   - mkdir VTK-9.0.1_build
   - cd VTK-9.0.1_build
-  - cmake -DCMAKE_BUILD_TYPE:STRING=Release -DVTK_QT_VERSION:STRING=5 -DQT_QMAKE_EXECUTABLE:PATH=/usr/lib/qt5/bin/qmake -DCMAKE_PREFIX_PATH:PATH=/usr/lib/x86_64-linux-gnu/cmake -DBUILD_SHARED_LIBS:BOOL=ON -DVTK_MODULE_ENABLE_VTK_RenderingContextOpenGL2=YES ../VTK-9.0.1
+  - cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_BUILD_TYPE:STRING=Release -DVTK_QT_VERSION:STRING=5 -DQT_QMAKE_EXECUTABLE:PATH=/usr/lib/qt5/bin/qmake -DCMAKE_PREFIX_PATH:PATH=/usr/lib/x86_64-linux-gnu/cmake -DBUILD_SHARED_LIBS:BOOL=ON -DVTK_MODULE_ENABLE_VTK_RenderingContextOpenGL2=YES ../VTK-9.0.1
   - make -j4
   - sudo make install
   - cd $MY_LOCATION
